@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribution Expenses by Category</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Distribution Expenses by Category</h1>
+
+    <!-- Sorting and Filtering Form -->
+    <form method="get">
+        <label for="threshold">Minimum Expense Threshold:</label>
+        <input type="number" id="threshold" name="threshold" placeholder="Enter amount" value="{{ request.GET.threshold }}">
+        
+        <label for="sort_by">Sort By:</label>
+        <select id="sort_by" name="sort_by">
+            <option value="category__name" {% if request.GET.sort_by == 'category__name' %}selected{% endif %}>Category</option>
+            <option value="-total_expense" {% if request.GET.sort_by == '-total_expense' %}selected{% endif %}>Total Expense (Descending)</option>
+            <option value="total_expense" {% if request.GET.sort_by == 'total_expense' %}selected{% endif %}>Total Expense (Ascending)</option>
+        </select>
+        
+        <button type="submit">Apply</button>
+    </form>
+
+    <!-- Data Table -->
+    <table>
+        <tr>
+            <th>Category</th>
+            <th>Total Expense</th>
+        </tr>
+        {% for item in report_data %}
+        {% if item.category__name %}
+        <tr>
+            <td>{{ item.category__name }}</td>
+            <td>{{ item.total_expense }}</td>
+        </tr>
+        {% endif %}
+        {% empty %}
+        <tr>
+            <td colspan="2">No data available.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- Chart Container -->
+    <canvas id="expenseChart" width="400" height="200"></canvas>
+
+    <script>
+        const labels = [{% for item in report_data %}'{{ item.category__name }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+        const data = [{% for item in report_data %}{{ item.total_expense }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        const expenseChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Expense',
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Total Expense'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Categories'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
